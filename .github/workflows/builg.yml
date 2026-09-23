@@ -1,0 +1,39 @@
+name: Build FelestDLC
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+
+      - name: Unzip src and gradle
+        run: |
+          unzip -o src.zip -d .
+          unzip -o gradle.zip -d .
+
+      - name: Fix gradle wrapper
+        run: |
+          mkdir -p gradle/wrapper
+          curl -L -o gradle/wrapper/gradle-wrapper.jar https://raw.githubusercontent.com/gradle/gradle/v8.8.0/gradle/wrapper/gradle-wrapper.jar
+          curl -L -o gradlew https://raw.githubusercontent.com/gradle/gradle/v8.8.0/gradlew
+          chmod +x gradlew
+
+      - name: Build with Gradle
+        run: ./gradlew build --no-daemon
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: FelestDLC
+          path: build/libs/*.jar
